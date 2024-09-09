@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>WebRTC Protect :: Options Page</title>
+    <style>
+      #incognito {
+        color: #fff;
+        font-weight: bold;
+        background-color: #E41655;
+        padding: 2px 5px;
+      }
+      #incognito[data-enabled=true] {
+        background-color: #1B8057;
+      }
+      @supports (-moz-appearance:none) {
+        body {
+          font-size: 13px;
+          font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+          margin: 10px;
+        }
+        button,
+        input[type=submit],
+        input[type=button] {
+          height: 24px;
+          color: #444;
+          background-image: linear-gradient(rgb(237, 237, 237), rgb(237, 237, 237) 38%, rgb(222, 222, 222));
+          box-shadow: rgba(0, 0, 0, 0.08) 0 1px 0, rgba(255, 255, 255, 0.75) 0 1px 2px inset;
+          text-shadow: rgb(240, 240, 240) 0 1px 0;
+          border: solid 1px rgba(0, 0, 0, 0.25);
+        }
+        input[type=button]:disabled {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td><input type="radio" name="select" id="enabled"></td>
+        <td><label for="enabled">Enabled (recommended)</label></td>
+        <td>
+          <select id="when-enabled">
+            <option value="disable_non_proxied_udp">Disable non-proxied UDP (force proxy)</option>
+            <option value="proxy_only">Only connections using TURN on a TCP connection through a proxy</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><input type="radio" name="select" id="disabled"></td>
+        <td><label for="disabled">Disabled</label></td>
+        <td>
+          <select id="when-disabled">
+            <option value="default_public_interface_only">Use the default public interface only</option>
+            <option value="default_public_and_private_interfaces">Use the default public interface and private interface</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="device-enum-api"></td>
+        <td colspan="2"><label for="device-enum-api">Disable WebRTC Media Device Enumeration API (only works if WebRTC protection is enabled)</label></td>
+      </tr>
+    </table>
+    <p>
+      Can this extension protect incognito (private) mode? <span id="incognito">No</span>
+      <div style="background-color: rgba(0, 0, 0, 0.05); padding: 3px; margin-top: 5px;">In Chrome to enable this option, mark "Allow in incognito" checkbox</div>
+    </p>
+    <div id="explore"></div>
+    <div>
+      <input type="button" value="Factory Reset" id="reset">
+      <input type="button" value="Support Development" id="support"> - <input type="button" value="Save" id="save">
+      <span id="toast"></span>
+    </div>
+    <script src="index.js"></script>
+    <script async src="matched.js"></script>
+  </body>
+</html>
