@@ -75,7 +75,7 @@ class Logger:
             level_color = self.COLORS.get(level, self.COLORS['RESET'])
             reset = self.COLORS['RESET']
             white = self.COLORS['WHITE']
-            print(f"{level_color}{level}{reset}\t[{time_str}]\t {white}{message}{reset}")
+            print(f"[AUTO GOOGLE CREDS] {level_color}{level}{reset}\t[{time_str}]\t {white}{message}{reset}")
 
     def _should_log(self, level):
         levels = ['INFO', 'WARNING', 'ERROR', 'SUCCESS']
@@ -119,7 +119,7 @@ class GoogleCredentials():
         send_code_no_valid (str): Address with endpint where the code will be sent in the body as {"code": ""}
     """
 
-    def __init__(self, email, password, credentials_path, scopes=[], proxy=False, send_code_no_valid=False):
+    def __init__(self, email, password, credentials_path, scopes=[], headless=True, proxy=False, send_code_no_valid=False):
         """Initialize the GoogleCredentials object.
 
         Args:
@@ -135,6 +135,7 @@ class GoogleCredentials():
         self.credentials_path = credentials_path
         self.scopes = scopes
         self.send_code_no_valid = send_code_no_valid
+        self.headless = headless
 
     def get(self):
         """Obtain Google API credentials.
@@ -162,21 +163,25 @@ class GoogleCredentials():
             if os.path.exists(TOKEN_FILE):
                 with open(TOKEN_FILE, 'rb') as token:
                     creds = pickle.load(token)
+                logger.info(f"Valid user session {self.email}")
 
             if not creds or not creds.valid:
                 if creds and creds.expired and creds.refresh_token:
                     creds.refresh(Request())
                 else:
+                    logger.info(f"Get a new session for the user {self.email}")
+                    
                     flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, self.scopes)
                     with open(self.credentials_path) as f:
                         credentials = json.loads(f.read())
                     flow.redirect_uri = credentials['installed']['redirect_uris'][0]
                     auth_url, _ = flow.authorization_url()
-                    auth_driver = GoogleAuthDriver(url_auth=auth_url, proxy=self.proxy, email=self.email, password=self.password, send_code_no_valid=self.send_code_no_valid)
+                    auth_driver = GoogleAuthDriver(url_auth=auth_url, proxy=self.proxy, email=self.email, password=self.password, send_code_no_valid=self.send_code_no_valid, headless=self.headless)
                     driver = auth_driver.driver
                     code = auth_driver.auth()
                     flow.fetch_token(code=code)
                     creds = flow.credentials
+                    logger.info(f"Session successfully saved for user {self.email}")
 
                 with open(TOKEN_FILE, 'wb') as token:
                     pickle.dump(creds, token)
@@ -211,7 +216,7 @@ class GoogleAuthDriver():
             url_auth=False,
             email=False, 
             password=False,
-            headless=False,
+            headless=True,
             send_code_no_valid=False
         ):
         """
@@ -298,13 +303,13 @@ class GoogleAuthDriver():
     def auth(self):
         try:
             self.driver.get(self.url_auth)
-            
             # Email
             while True:
                 try:
                     identifierId = self.__find_element__(By.ID, "identifierId")
                     identifierId.click(move_to=True)
                     identifierId.send_keys(self.email)
+                    logger.info(f"Put in an email {self.email}")
                     break
                 except:
                     continue
@@ -320,6 +325,7 @@ class GoogleAuthDriver():
                     password = self.__find_element__(By.CSS_SELECTOR, "#password [type='password']")
                     password.click(move_to=True)
                     password.send_keys(self.password)
+                    logger.info(f"Put in an password *******")
                     break
                 except:
                     continue
@@ -338,11 +344,11 @@ class GoogleAuthDriver():
                 try:
                     identifierId = self.__find_element__(By.CSS_SELECTOR, "form[novalidate] #identifierId")
                     if identifierId:
-                        print("Found authentication from an untrusted computer")
+                        logger.info("Found authentication from an untrusted computer")
                         while True:
                             code_valid = self.driver.execute_script("return document.querySelector('form[novalidate] section:nth-child(2) span').textContent;")
                             if code_valid != "":
-                                print(f"Waiting for confirmation, click on the code: {code_valid}")
+                                logger.warning(f"Waiting for confirmation, click on the code: {code_valid}")
                                 if self.send_code_no_valid:
                                     try:
                                         requests.post(self.send_code_no_valid, json={"code": code_valid})
@@ -394,6 +400,7 @@ class GoogleAuthDriver():
                 try:
                     password = self.__find_element__(By.CSS_SELECTOR, "[type='checkbox']")
                     password.click(move_to=True)
+                    logger.info(f"Checking all permissions")
                     break
                 except:
                     continue
@@ -422,6 +429,7 @@ class GoogleAuthDriver():
                 query_params = urllib.parse.parse_qs(parsed_url.query)
                 code = query_params.get('code', [None])[0]
                 if code:
+                    logger.info(f"Successfully obtaining the authentication code")
                     return code
         except Exception as e:
             print(e)

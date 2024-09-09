@@ -38,6 +38,7 @@ The `install` function ensures these packages are installed silently. If a packa
         scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
         proxy="<PROXY>",  # Replace with your proxy if needed
         send_code_no_valid="<ENDPOINT>"  # Replace with your endpoint if needed
+        headless=False # Headless is not stable in the off state, if you have a proxy to use, without a proxy it works fine (the problem is exactly in the authorization, the thing is that if there is a proxy, it can request several codes through the phone, and I provided only 1 time)
     ).get()
 
     client = gspread.authorize(creds)
